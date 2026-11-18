@@ -1,6 +1,9 @@
 import { useState, useRef, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 
+// ตอนพัฒนา (npm run dev) ปล่อยว่างไว้ ใช้ proxy ใน vite.config.js | ตอนขึ้น Vercel ตั้ง VITE_API_URL เป็น URL ของ backend
+const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
+
 // ครอบ <pre> ของ Markdown เพื่อเพิ่มปุ่ม Copy
 function CodeBlock({ children }) {
   const [copied, setCopied] = useState(false)
@@ -43,7 +46,7 @@ export function useChat() {
     setError(null)
     setLoading(true)
     try {
-      const res = await fetch('/api/chat', {
+      const res = await fetch(`${API_URL}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, history }),
@@ -54,7 +57,7 @@ export function useChat() {
       setMessages((prev) => [...prev, { role: 'assistant', text: data.reply }])
     } catch (err) {
       if (err.name === 'TimeoutError') setError('AI ตอบช้าเกินไป ลองใหม่อีกครั้ง')
-      else if (err instanceof TypeError) setError('เชื่อมต่อ backend ไม่ได้ — รัน npm run dev ในโฟลเดอร์ backend แล้วหรือยัง?')
+      else if (err instanceof TypeError) setError('เชื่อมต่อ backend ไม่ได้ — backend รันอยู่หรือยัง? (ตั้ง VITE_API_URL ถูกหรือเปล่า)')
       else setError(err.message)
     } finally {
       setLoading(false)
